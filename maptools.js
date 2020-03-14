@@ -7,8 +7,9 @@ var maptools = {
 
     initMap: function() {
         console.log("Map ready.");
-        var c = {lat: 0, lng: 0};
-        maptools.map = new google.maps.Map(document.getElementById('map'), {zoom: 2, center: c});
+        // 55.3781° N, 3.4360° W
+        var c = {lat: 55.3781, lng: -3.436};
+        maptools.map = new google.maps.Map(document.getElementById('map'), {zoom: 4, center: c});
         maptools.geocoder = new google.maps.Geocoder();
         maptools.markerCluster = new MarkerClusterer(maptools.map, [], {imagePath: 'markers/m'});
         maptools.initDocument();
@@ -40,8 +41,7 @@ var maptools = {
             var community = data[i];
             if (community.Display === 'TRUE') {
                 console.log('Attempting plot for: ' + community.Title);
-                setTimeout(maptools.plotAddress, i*50, community);
-                //maptools.plotAddress(community);
+                setTimeout(maptools.plotAddress, i*300, community);
             } else {
                 console.log('Not attempting plotting: ' + community.Title);
             }
@@ -69,7 +69,7 @@ var maptools = {
                 maptools.markers.push(marker);
                 maptools.markerCluster.addMarker(marker);
             } else if (status == 'OVER_QUERY_LIMIT') {
-                setTimeout(maptools.plotAddress, 1000, community); // try again in a second
+                setTimeout(maptools.plotAddress, 200, community); // try again in a short while
 
             } else {
                 console.log('Geocode failed for: ' + community.Title + ' - ' + status);
