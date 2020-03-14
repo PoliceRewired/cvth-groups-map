@@ -12,24 +12,13 @@
     </style>
   </head>
   <body>
-    <!--The div element for the map -->
+    <!-- div contains the map -->
     <div id="map" style="background-color: gray;"></div>
-    <script>
-    // Initialize and add the map
-    function initMap() {
-        var c = {lat: 0, lng: 0};
-        var map = new google.maps.Map(document.getElementById('map'), {zoom: 2, center: c});
 
-        // var marker = new google.maps.Marker({position: uluru, map: map});
-    }
-    </script>
-    <!--Load the API from the specified URL
-    * The async attribute allows the browser to render the page while the API loads
-    * The key parameter will contain your own API key (which is not needed for this tutorial)
-    * The callback parameter executes the initMap() function
-    -->
-    <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDK5aA2nJ9euRm1gmP0Vaji3RxnbCeB3G8&callback=initMap">
-    </script>
+    <!-- scripts -->
+    <script src="maptools.js"></script>
+    <script src="jquery-3.4.1.min.js"></script>
+    <script src="jquery.csv.min.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDK5aA2nJ9euRm1gmP0Vaji3RxnbCeB3G8&callback=maptools.initMap"></script>
   </body>
 </html>
