@@ -2,16 +2,18 @@
 <html>
   <head>
     <style>
+        html, body {
+            height: 100%;
+        }
       #map {
-        height: 400px;
+        height: 100%;
         width: 100%;
        }
     </style>
   </head>
   <body>
-    <h3>My Google Maps Demo</h3>
     <!--The div element for the map -->
-    <div id="map"></div>
+    <div id="map" style="background-color: gray;"></div>
     <script>
     // Initialize and add the map
     function initMap() {
