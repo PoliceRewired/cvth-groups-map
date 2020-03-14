@@ -2,12 +2,15 @@ var maptools = {
 
     map: null,
     geocoder: null,
+    markers: [],
+    markerCluster: null,
 
     initMap: function() {
         console.log("Map ready.");
         var c = {lat: 0, lng: 0};
         maptools.map = new google.maps.Map(document.getElementById('map'), {zoom: 2, center: c});
         maptools.geocoder = new google.maps.Geocoder();
+        maptools.markerCluster = new MarkerClusterer(maptools.map, [], {imagePath: 'markers/m'});
         maptools.initDocument();
     },
 
@@ -37,7 +40,8 @@ var maptools = {
             var community = data[i];
             if (community.Display === 'TRUE') {
                 console.log('Attempting plot for: ' + community.Title);
-                maptools.plotAddress(community);
+                setTimeout(maptools.plotAddress, i*50, community);
+                //maptools.plotAddress(community);
             } else {
                 console.log('Not attempting plotting: ' + community.Title);
             }
@@ -54,13 +58,18 @@ var maptools = {
                     content: '<b>'+community.Title+'</b><br/><a href="'+community.URL+'" target="_blank">Visit...</a>'
                 });
                 var marker = new google.maps.Marker({
-                    map: maptools.map,
+                    //map: maptools.map,
                     position: results[0].geometry.location,
                     title: community.Title
                 });
                 marker.addListener('click', function() {
                     infowindow.open(maptools.map, marker);
                 });
+
+                maptools.markers.push(marker);
+                maptools.markerCluster.addMarker(marker);
+            } else if (status == 'OVER_QUERY_LIMIT') {
+                setTimeout(maptools.plotAddress, 1000, community); // try again in a second
 
             } else {
                 console.log('Geocode failed for: ' + community.Title + ' - ' + status);
