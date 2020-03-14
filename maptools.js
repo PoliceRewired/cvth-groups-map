@@ -9,7 +9,7 @@ var maptools = {
         console.log("Map ready.");
         // 55.3781° N, 3.4360° W
         var c = {lat: 55.3781, lng: -3.436};
-        maptools.map = new google.maps.Map(document.getElementById('map'), {zoom: 4, center: c});
+        maptools.map = new google.maps.Map(document.getElementById('map'), {zoom: 6, center: c});
         maptools.geocoder = new google.maps.Geocoder();
         maptools.markerCluster = new MarkerClusterer(maptools.map, [], {imagePath: 'markers/m'});
         maptools.initDocument();
