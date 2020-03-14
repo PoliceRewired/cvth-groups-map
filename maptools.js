@@ -40,8 +40,15 @@ var maptools = {
         for (var i = 0; i < data.length; i++) {
             var community = data[i];
             if (community.Display === 'TRUE') {
-                console.log('Attempting plot for: ' + community.Title);
-                setTimeout(maptools.plotAddress, i*300, community);
+                if (community.Lat && community.Lng) {
+                    console.log('Direct plot for: ' + community.Title + " - At: " + community.Lat + ", " + community.Lng);
+                    var myLatLng = { lat: parseFloat(community.Lat), lng: parseFloat(community.Lng) };
+                    maptools.createMarker(community, myLatLng);
+                } else {
+                    console.log('Attempting geocode for: ' + community.Title);
+                    // only geocode if necessary
+                    setTimeout(maptools.plotAddress, i*300, community);
+                }
             } else {
                 console.log('Not attempting plotting: ' + community.Title);
             }
@@ -52,22 +59,8 @@ var maptools = {
         maptools.geocoder.geocode({'address': community.Location}, function(results, status) {
             if (status == 'OK') {
                 console.log('Geocode succeeded for: ' + community.Title);
-                // map.setCenter(results[0].geometry.location);
+                maptools.createMarker(community, results[0].geometry.location);
 
-                var infowindow = new google.maps.InfoWindow({
-                    content: '<b>'+community.Title+'</b><br/><a href="'+community.URL+'" target="_blank">Visit...</a>'
-                });
-                var marker = new google.maps.Marker({
-                    //map: maptools.map,
-                    position: results[0].geometry.location,
-                    title: community.Title
-                });
-                marker.addListener('click', function() {
-                    infowindow.open(maptools.map, marker);
-                });
-
-                maptools.markers.push(marker);
-                maptools.markerCluster.addMarker(marker);
             } else if (status == 'OVER_QUERY_LIMIT') {
                 setTimeout(maptools.plotAddress, 200, community); // try again in a short while
 
@@ -75,6 +68,26 @@ var maptools = {
                 console.log('Geocode failed for: ' + community.Title + ' - ' + status);
             }
         });
-    }
+    },
+    
+    createMarker: function(community, location) {
+        console.log('Creating marker for: ' + community.Title);
 
+        var infowindow = new google.maps.InfoWindow({
+            content: '<b>'+community.Title+'</b><br/><a href="'+community.URL+'" target="_blank">Visit...</a>'
+        });
+
+        var marker = new google.maps.Marker({
+            //map: maptools.map,
+            position: location,
+            title: community.Title
+        });
+
+        marker.addListener('click', function() {
+            infowindow.open(maptools.map, marker);
+        });
+
+        maptools.markers.push(marker);
+        maptools.markerCluster.addMarker(marker);
+    }
 };
