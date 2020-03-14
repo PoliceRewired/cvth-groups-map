@@ -9,12 +9,6 @@ The map uses the Google Maps javascript API, with data sourced from [this crowds
 
 jQuery is used to facilitate a quick and dirty call to retrieve the sheet's data in CSV format. The jQuery-csv plugin is then used to construct objects from the CSV data, which are then plotted to the map as markers.
 
-## Current issues
-
-We are currently working on the following improvements:
-
-* Client-side geocoding is slowing down the appearance of markers - we can fix this by doing the geocoding ahead of time.
-
 ## Libraries
 
 * [jQuery](https://jquery.com/)
