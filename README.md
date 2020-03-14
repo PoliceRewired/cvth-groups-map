@@ -13,8 +13,7 @@ jQuery is used to facilitate a quick and dirty call to retrieve the sheet's data
 
 We are currently working on the following improvements:
 
-* Geocoding needs to be rate limited - to ensure that all the markers can appear on the map.
-* Markers should be clustered - to improve visibility and make it easier to explore the map.
+* Client-side geocoding is slowing down the appearance of markers - we can fix this by doing the geocoding ahead of time.
 
 ## Libraries
 
