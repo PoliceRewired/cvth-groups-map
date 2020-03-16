@@ -73,13 +73,17 @@ var maptools = {
     createMarker: function(community, location) {
         console.log('Creating marker for: ' + community.Title);
 
+        var latFuzz = (0.0001 * Math.random()) - 0.0005;
+        var lngFuzz = (0.0001 * Math.random()) - 0.0005;
+        var fuzzedLocation = { lat: location.lat+latFuzz, lng: location.lng+lngFuzz };
+
         var infowindow = new google.maps.InfoWindow({
             content: '<b>'+community.Title+'</b><br/><a href="'+community.URL+'" target="_blank">Visit...</a>'
         });
 
         var marker = new google.maps.Marker({
             //map: maptools.map,
-            position: location,
+            position: fuzzedLocation,
             title: community.Title
         });
 
