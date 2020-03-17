@@ -73,18 +73,61 @@ var maptools = {
     createMarker: function(community, location) {
         console.log('Creating marker for: ' + community.Title);
 
-        var latFuzz = (0.0001 * Math.random()) - 0.0005;
-        var lngFuzz = (0.0001 * Math.random()) - 0.0005;
+        var latFuzz = (0.001 * Math.random()) - 0.0005;
+        var lngFuzz = (0.001 * Math.random()) - 0.0005;
         var fuzzedLocation = { lat: location.lat+latFuzz, lng: location.lng+lngFuzz };
 
         var infowindow = new google.maps.InfoWindow({
-            content: '<b>'+community.Title+'</b><br/><a href="'+community.URL+'" target="_blank">Visit...</a>'
+            content: '<h1><a href="'+community.URL+'" target="_blank">'+community.Title+'</a></h1>' 
+                    + '<h2>'+community.Source+'</h2>' 
+                    + '<a href="'+community.URL+'" target="_blank">Visit...</a>'
         });
 
+        var iconChoice;
+        switch (community.Source) {
+            case "facebook group":
+            case "facebook chat":
+                iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/blue-pushpin.png";
+                break;
+            case "whatsapp group":
+                iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png";
+                break;
+            case "nextdoor community":
+                iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/orange-pushpin.png";
+                break;
+            case "instagram":
+                iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/pink-pushpin.png";
+                break;
+            case "unknown (url shortened)":
+                iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/wht-pushpin.png";
+                break;
+            case "twitter account":
+                iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/ltblu-pushpin.png";
+                break;
+            case "shared google doc":
+            case "shared google folder":
+                iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png";
+                break;
+            case "halo community":
+                iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png";
+                break;
+            default:
+                iconChoice = 'http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png';
+                break;
+        }
+
         var marker = new google.maps.Marker({
-            //map: maptools.map,
             position: fuzzedLocation,
-            title: community.Title
+            title: community.Title,
+            icon: iconChoice
+            // icon: {
+            //     path: MAP_PIN,
+            //     fillColor: '#00CCBB',
+            //     fillOpacity: 1,
+            //     strokeColor: '',
+		    //     strokeWeight: 0
+            // },
+            // map_icon_label: '<span class="map-icon map-icon-embassy"></span>'
         });
 
         marker.addListener('click', function() {
