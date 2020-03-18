@@ -3,15 +3,19 @@ var maptools = {
     map: null,
     geocoder: null,
     markers: [],
+    markerGroups: [],
     markerCluster: null,
+
+    sourceSelectControlDiv: null,
 
     initMap: function() {
         console.log("Map ready.");
-        // 55.3781° N, 3.4360° W
-        var c = {lat: 55.3781, lng: -3.436};
+
+        var c = {lat: 55.3781, lng: -3.436}; // centre on the UK
         maptools.map = new google.maps.Map(document.getElementById('map'), {zoom: 6, center: c});
         maptools.geocoder = new google.maps.Geocoder();
         maptools.markerCluster = new MarkerClusterer(maptools.map, [], {imagePath: 'markers/m'});
+
         maptools.initDocument();
     },
 
@@ -29,6 +33,10 @@ var maptools = {
                 console.log("Data CSV retrieved.");
                 var objects = $.csv.toObjects(data);
                 maptools.parseSheetData(objects);
+
+                console.log('Creating control divs');
+                maptools.sourceSelectControlDiv = maptools.createSourceSelector();
+                maptools.map.controls[google.maps.ControlPosition.TOP_CENTER].push(maptools.sourceSelectControlDiv);
             },
             dataType: "text",
         });
@@ -36,21 +44,22 @@ var maptools = {
 
     parseSheetData: function(data) {
         console.log("Data objects ready.");
-        console.log(data);
+        console.debug(data);
         for (var i = 0; i < data.length; i++) {
             var community = data[i];
             if (community.Display === 'TRUE') {
                 if (community.Lat && community.Lng) {
-                    console.log('Direct plot for: ' + community.Title + " - At: " + community.Lat + ", " + community.Lng);
+                    console.debug('Direct plot for: ' + community.Title + " - At: " + community.Lat + ", " + community.Lng);
                     var myLatLng = { lat: parseFloat(community.Lat), lng: parseFloat(community.Lng) };
-                    maptools.createMarker(community, myLatLng);
+                    var marker = maptools.createMarker(community, myLatLng);
+                    maptools.storeMarker(community, marker);
                 } else {
                     console.log('Attempting geocode for: ' + community.Title);
                     // only geocode if necessary
                     setTimeout(maptools.plotAddress, i*300, community);
                 }
             } else {
-                console.log('Not attempting plotting: ' + community.Title);
+                console.warn('Display == FALSE for: ' + community.Title);
             }
         }
     },
@@ -59,19 +68,31 @@ var maptools = {
         maptools.geocoder.geocode({'address': community.Location}, function(results, status) {
             if (status == 'OK') {
                 console.log('Geocode succeeded for: ' + community.Title);
-                maptools.createMarker(community, results[0].geometry.location);
+                var marker = maptools.createMarker(community, results[0].geometry.location);
+                maptools.storeMarker(community, marker);
 
             } else if (status == 'OVER_QUERY_LIMIT') {
                 setTimeout(maptools.plotAddress, 200, community); // try again in a short while
 
             } else {
-                console.log('Geocode failed for: ' + community.Title + ' - ' + status);
+                console.warn('Geocode failed for: ' + community.Title + ' - ' + status);
             }
         });
     },
+
+    storeMarker: function(community, marker) {
+        if (!maptools.markers[community.Source]) { maptools.markers[community.Source] = []; }
+        
+        if (!maptools.markerGroups.includes(community.Source)) {
+            maptools.markerGroups.push(community.Source); // add group to groups list
+        }
+
+        maptools.markers[community.Source].push(marker); // store marker against its group
+        maptools.markerCluster.addMarker(marker); // display marker in the cluster
+    },
     
     createMarker: function(community, location) {
-        console.log('Creating marker for: ' + community.Title);
+        console.debug('Creating marker for: ' + community.Title);
 
         var latFuzz = (0.001 * Math.random()) - 0.0005;
         var lngFuzz = (0.001 * Math.random()) - 0.0005;
@@ -120,21 +141,95 @@ var maptools = {
             position: fuzzedLocation,
             title: community.Title,
             icon: iconChoice
-            // icon: {
-            //     path: MAP_PIN,
-            //     fillColor: '#00CCBB',
-            //     fillOpacity: 1,
-            //     strokeColor: '',
-		    //     strokeWeight: 0
-            // },
-            // map_icon_label: '<span class="map-icon map-icon-embassy"></span>'
         });
 
         marker.addListener('click', function() {
             infowindow.open(maptools.map, marker);
         });
 
-        maptools.markers.push(marker);
-        maptools.markerCluster.addMarker(marker);
+        return marker;
+    },
+
+    createSourceSelector: function() {
+        var controlDiv = document.createElement('div');
+
+        var controlUI = document.createElement('div');
+        controlUI.className = 'controlUi';
+        controlUI.title = 'Click to select sources';
+        controlDiv.appendChild(controlUI);
+      
+        // Set CSS for the control interior.
+        var controlText = document.createElement('div');
+        controlText.id = 'sourceSelectHeader';
+        controlText.className = 'controlHeader';
+        controlText.innerHTML = '+ Select community sources...';
+        controlUI.appendChild(controlText);
+
+        var controlTable = document.createElement('table');
+        controlTable.className = 'markerGroupTable';
+
+        // step through each marker group
+        for (var i = 0; i < maptools.markerGroups.length; i++) {
+            var group = maptools.markerGroups[i];
+            var tr = document.createElement('tr');
+            
+            var td_check = document.createElement('td');
+            var check = document.createElement('input');
+            check.type = 'checkbox';
+            check.id = 'check_group_'+i;
+            check.name = 'check_group_'+i;
+            check.checked = true;
+            check.className = 'sourceCheck';
+            check.innerHTML = group;
+            td_check.appendChild(check);
+
+            var td_group = document.createElement('td');
+            td_group.innerHTML = "<label for='check_group_"+i+"'>"+group+"</label>";
+
+            tr.appendChild(td_check);
+            tr.appendChild(td_group);
+            controlTable.appendChild(tr);
+        }
+
+        controlUI.appendChild(controlTable);
+
+        controlUI.addEventListener('change', function(e) {
+            if (e.target.className === 'sourceCheck') {
+                maptools.updateSources();
+            }
+        });
+
+        controlUI.addEventListener('click', function(e) {
+            if (e.target.id === 'sourceSelectHeader') {
+                $('.markerGroupTable').toggle();
+            }
+        });
+
+        controlDiv.index = 1;
+        controlDiv.style.marginTop = "10px";
+        return controlDiv;
+    },
+
+    updateSources: function() {
+        console.debug('checkbox clicked.');
+        maptools.selectedGroups = [];
+        for (c = 0; c < maptools.markerGroups.length; c++) {
+            if ($('#check_group_'+c).is(":checked")) {
+                maptools.selectedGroups.push(maptools.markerGroups[c]);
+            }
+        }
+        console.debug(maptools.selectedGroups);
+
+        // clear and re-add markers
+        maptools.markerCluster.clearMarkers();
+        for (s = 0; s < maptools.selectedGroups.length; s++) {
+            var selectedGroup = maptools.selectedGroups[s];
+            console.debug('Adding: ' + selectedGroup + ' (' + maptools.markers[selectedGroup].length + ')');
+            for (m = 0; m < maptools.markers[selectedGroup].length; m++) {
+                var marker = maptools.markers[selectedGroup][m];
+                maptools.markerCluster.addMarker(marker);
+            }
+        }
     }
 };
+
