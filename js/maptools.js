@@ -7,6 +7,8 @@ var maptools = {
     markerCluster: null,
 
     sourceSelectControlDiv: null,
+    geolocatorControlDiv: null,
+    externalLinksControlDiv: null,
 
     initMap: function() {
         console.log("Map ready.");
@@ -23,7 +25,7 @@ var maptools = {
         $(document).ready(function() {
             console.log("Document ready.");
             maptools.readMarkers();
-            maptools.geolocate();
+            // maptools.geolocate();
         });
     },
 
@@ -38,6 +40,11 @@ var maptools = {
                 console.log('Creating control divs');
                 maptools.sourceSelectControlDiv = maptools.createSourceSelector();
                 maptools.map.controls[google.maps.ControlPosition.TOP_CENTER].push(maptools.sourceSelectControlDiv);
+                maptools.geolocatorControlDiv = maptools.createGeolocator();
+                maptools.map.controls[google.maps.ControlPosition.LEFT_TOP].push(maptools.geolocatorControlDiv);
+                maptools.externalLinksControlDiv = maptools.createExternalLinks();
+                maptools.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(maptools.externalLinksControlDiv);
+
             },
             dataType: "text",
         });
@@ -106,8 +113,8 @@ var maptools = {
 
         var infowindow = new google.maps.InfoWindow({
             content: '<h1><a href="'+community.URL+'" target="_blank">'+community.Title+'</a></h1>' 
-                    + '<h2>'+community.Source+'</h2>' 
-                    + '<a href="'+community.URL+'" target="_blank">Visit...</a>'
+                    + '<h2>'+community.Location+'</h2>' 
+                    + '<a href="'+community.URL+'" target="_blank">Visit '+community.Source+'...</a>'
         });
 
         var iconChoice;
@@ -154,6 +161,54 @@ var maptools = {
         });
 
         return marker;
+    },
+
+    createExternalLinks: function() {
+        var controlDiv = document.createElement('div');
+
+        var controlUI = document.createElement('div');
+        controlUI.className = 'controlUi';
+        controlUI.id = 'geolocateUi';
+        controlUI.title = 'Other volunteering options...';
+
+        controlUI.innerHTML =
+            '<span style="font-size: 12pt; font-weight: bold;">Communities and help</span>' +
+            '<p>Find a community to join on the map,<br/>or visit:</p>' +
+            '<ul>' +
+            '<li><a target="_blank" href="https://localhelpers.org/">LocalHelpers.org</a></li>' +
+            '<li><a target="_blank" href="https://randall.ie/help/">Self Isolation Helpers</a></li>' +
+            '<li><a target="_blank" href="https://www.localhalo.com/coronavirus">Halo communities</a></li>' +
+            '<li><a target="_blank" href="https://nextdoor.co.uk/">Nextdoor communities</a></li>' +
+            '</ul>';
+
+            controlDiv.appendChild(controlUI);
+
+            controlDiv.index = 1;
+            controlDiv.style.marginLeft = "10px";
+            controlDiv.style.marginBottom = "10px";
+            return controlDiv;
+        },
+
+    createGeolocator: function() {
+        var controlDiv = document.createElement('div');
+
+        var controlUI = document.createElement('div');
+        controlUI.className = 'controlUi';
+        controlUI.id = 'geolocateUi';
+        controlUI.title = 'Click to see your location';
+
+        controlUI.innerHTML = '<img src="icons/baseline_home_black_48dp.png" style="width: 32px; height: auto;" id="geolocateIcon" />';
+        controlDiv.appendChild(controlUI);
+
+        controlUI.addEventListener('click', function(e) {
+            if (e.target.id === 'geolocateUi' || e.target.id === 'geolocateIcon') {
+                maptools.geolocate();
+            }
+        });
+
+        controlDiv.index = 1;
+        controlDiv.style.marginLeft = "10px";
+        return controlDiv;
     },
 
     createSourceSelector: function() {
@@ -262,9 +317,28 @@ var maptools = {
         }
     },
 
-    find: function() {
+    visitOnMap: function(address) {
+        maptools.geocoder.geocode({'address': address}, function(results, status) {
+            if (status == 'OK') {
+                console.log('Geocode succeeded for: ' + community.Title);
+                try {
+                    var location = results[0].geometry.location;
+                    maptools.map.panTo(location);
+                    maptools.smoothZoom(maptools.map, 12, maptools.map.getZoom());
+        
+                } catch (e) {
+                    console.error('Marker creation failed for geocoded community: ' + community.Title);
+                    console.warn(community);
+                    console.warn(results);
+                }
+            } else if (status == 'OVER_QUERY_LIMIT') {
+                setTimeout(maptools.visitOnMap, 200, address); // try again in a short while
 
-
+            } else {
+                console.warn('Geocode failed for: ' + address + ' - ' + status);
+                alert('Unfortunately, unable to find: ' + address);
+            }
+        });
     },
 
     handleLocationError: function(browserHasGeolocation, infoWindow, pos) {
