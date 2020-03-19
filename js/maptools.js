@@ -25,7 +25,6 @@ var maptools = {
         $(document).ready(function() {
             console.log("Document ready.");
             maptools.readMarkers();
-            // maptools.geolocate();
         });
     },
 
@@ -309,11 +308,11 @@ var maptools = {
             maptools.smoothZoom(maptools.map, 12, maptools.map.getZoom());
 
           }, function() {
-            maptools.handleLocationError(true, infoWindow, maptools.map.getCenter());
+            maptools.handleLocationError(true);
           });
         } else {
           // Browser doesn't support Geolocation
-          maptools.handleLocationError(false, infoWindow, maptools.map.getCenter());
+          maptools.handleLocationError(false);
         }
     },
 
@@ -341,15 +340,9 @@ var maptools = {
         });
     },
 
-    handleLocationError: function(browserHasGeolocation, infoWindow, pos) {
-        // infoWindow = new google.maps.InfoWindow;
-        // infoWindow.setPosition(pos);
-        // infoWindow.setContent(
-        //     browserHasGeolocation ?
-        //         'Error: The Geolocation service failed.' :
-        //         'Error: Your browser doesn\'t support geolocation.');
-        // infoWindow.open(maptools.map);
+    handleLocationError: function(browserHasGeolocation) {
         console.warn(browserHasGeolocation ? 'Geolocation service failed.' : 'Browser does not support geolocation.');
+        alert('Unable to locate you.');
     },
 
     // the smooth zoom function
