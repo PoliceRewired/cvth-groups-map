@@ -23,6 +23,7 @@ var maptools = {
         $(document).ready(function() {
             console.log("Document ready.");
             maptools.readMarkers();
+            maptools.geolocate();
         });
     },
 
@@ -68,9 +69,14 @@ var maptools = {
         maptools.geocoder.geocode({'address': community.Location}, function(results, status) {
             if (status == 'OK') {
                 console.log('Geocode succeeded for: ' + community.Title);
-                var marker = maptools.createMarker(community, results[0].geometry.location);
-                maptools.storeMarker(community, marker);
-
+                try {
+                    var marker = maptools.createMarker(community, results[0].geometry.location);
+                    maptools.storeMarker(community, marker);
+                } catch (e) {
+                    console.error('Marker creation failed for geocoded community: ' + community.Title);
+                    console.warn(community);
+                    console.warn(results);
+                }
             } else if (status == 'OVER_QUERY_LIMIT') {
                 setTimeout(maptools.plotAddress, 200, community); // try again in a short while
 
@@ -129,7 +135,7 @@ var maptools = {
             case "shared google folder":
                 iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png";
                 break;
-            case "halo community":
+            case "localhalo community":
                 iconChoice = "http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png";
                 break;
             default:
@@ -230,6 +236,59 @@ var maptools = {
                 maptools.markerCluster.addMarker(marker);
             }
         }
-    }
+    },
+
+    geolocate: function() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            var pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+
+            // infoWindow = new google.maps.InfoWindow;
+            // infoWindow.setPosition(pos);
+            // infoWindow.setContent('Location found.');
+            // infoWindow.open(maptools.map);
+            maptools.map.panTo(pos);
+            maptools.smoothZoom(maptools.map, 12, maptools.map.getZoom());
+
+          }, function() {
+            maptools.handleLocationError(true, infoWindow, maptools.map.getCenter());
+          });
+        } else {
+          // Browser doesn't support Geolocation
+          maptools.handleLocationError(false, infoWindow, maptools.map.getCenter());
+        }
+    },
+
+    find: function() {
+
+
+    },
+
+    handleLocationError: function(browserHasGeolocation, infoWindow, pos) {
+        // infoWindow = new google.maps.InfoWindow;
+        // infoWindow.setPosition(pos);
+        // infoWindow.setContent(
+        //     browserHasGeolocation ?
+        //         'Error: The Geolocation service failed.' :
+        //         'Error: Your browser doesn\'t support geolocation.');
+        // infoWindow.open(maptools.map);
+        console.warn(browserHasGeolocation ? 'Geolocation service failed.' : 'Browser does not support geolocation.');
+    },
+
+    // the smooth zoom function
+    smoothZoom: function(map, max, cnt) {
+        if (cnt >= max) {
+            return;
+        } else {
+            z = google.maps.event.addListener(map, 'zoom_changed', function(event){
+                google.maps.event.removeListener(z);
+                maptools.smoothZoom(map, max, cnt + 1);
+            });
+            setTimeout(function(){map.setZoom(cnt)}, 80); // 80ms is what I found to work well on my system -- it might not work well on all systems
+        }
+    } 
 };
 
