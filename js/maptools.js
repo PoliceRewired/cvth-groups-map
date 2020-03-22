@@ -49,11 +49,11 @@ var maptools = {
 
                 console.log('Creating control divs');
                 maptools.sourceSelectControlDiv = maptools.createSourceSelector();
-                maptools.map.controls[google.maps.ControlPosition.TOP_CENTER].push(maptools.sourceSelectControlDiv);
+                maptools.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(maptools.sourceSelectControlDiv);
                 maptools.geolocatorControlDiv = maptools.createGeolocator();
                 maptools.map.controls[google.maps.ControlPosition.LEFT_TOP].push(maptools.geolocatorControlDiv);
                 maptools.externalLinksControlDiv = maptools.createExternalLinks();
-                maptools.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(maptools.externalLinksControlDiv);
+                maptools.map.controls[google.maps.ControlPosition.TOP_CENTER].push(maptools.externalLinksControlDiv);
 
             },
             dataType: "text",
@@ -182,22 +182,29 @@ var maptools = {
         controlUI.title = 'Other volunteering options...';
 
         controlUI.innerHTML =
-            '<span style="font-size: 12pt; font-weight: bold;">Communities and help</span>' +
+            '<span id="findHelpHeader" style="font-size: 12pt; font-weight: bold;">+ Find or volunteer help...</span>' +
+            '<div id="helpListDiv" style="display: none;">' +
             '<p style="font-size: 11pt;">Find a community to join on the map, or visit:</p>' +
             '<ul style="font-size: 11pt;">' +
             '<li><a target="_blank" href="https://localhelpers.org/">LocalHelpers.org</a> (offer/request help, UK)</li>' +
             '<li><a target="_blank" href="https://randall.ie/help/">Self Isolation Helpers</a> (offer/request help, IE)</li>' +
             '<li><a target="_blank" href="https://www.localhalo.com/coronavirus">Halo coronavirus communities</a></li>' +
             '<li><a target="_blank" href="https://nextdoor.co.uk/">Nextdoor communities</a></li>' +
-            '</ul>';
+            '</ul>' +
+            '</div>';
 
-            controlDiv.appendChild(controlUI);
+        controlDiv.appendChild(controlUI);
 
-            controlDiv.index = 1;
-            controlDiv.style.marginLeft = "10px";
-            controlDiv.style.marginBottom = "10px";
-            return controlDiv;
-        },
+        controlUI.addEventListener('click', function(e) {
+            if (e.target.id === 'findHelpHeader') {
+                $('#helpListDiv').toggle();
+            }
+        });
+
+        controlDiv.index = 1;
+        controlDiv.style.margin = "10px";
+        return controlDiv;
+    },
 
     createGeolocator: function() {
         var controlDiv = document.createElement('div');
@@ -233,7 +240,7 @@ var maptools = {
         var controlText = document.createElement('div');
         controlText.id = 'sourceSelectHeader';
         controlText.className = 'controlHeader';
-        controlText.innerHTML = '+ Select community sources...';
+        controlText.innerHTML = '+ Filter communities by type...';
         controlUI.appendChild(controlText);
 
         var controlTable = document.createElement('table');
@@ -277,7 +284,7 @@ var maptools = {
         });
 
         controlDiv.index = 1;
-        controlDiv.style.marginTop = "10px";
+        controlDiv.style.margin = "10px";
         return controlDiv;
     },
 
