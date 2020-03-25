@@ -16,6 +16,20 @@ To modify this site:
 * Once ready, commit and push to GitHub.
 * Submit a pull request with your commit.
 
+### OS X
+
+Under OS X, to serve the site to yourself, you can use:
+
+```
+python -m SimpleHTTPServer 8000
+```
+
+If you have Anaconda Python installed, instead use:
+
+```
+python3 -m http.server 8000
+```
+
 ### Libraries
 
 The map uses the Google Maps javascript API, with data sourced from [this crowdsourced sheet](https://docs.google.com/spreadsheets/d/117ukLjXiz8EfMjP-q9Aiu5XepQ39XK1W4DTMsE87llw/edit?usp=sharing) of communities.
