@@ -121,10 +121,18 @@ var maptools = {
         var lngFuzz = (0.001 * Math.random()) - 0.0005;
         var fuzzedLocation = { lat: location.lat+latFuzz, lng: location.lng+lngFuzz };
 
+        var infoWindowContent =
+            '<div class="infoWindow">'
+            + '<h1><a href="'+community.URL+'" target="_blank">'+community.Title+'</a></h1>'
+            + '<h2>'+community.Location+'</h2>'
+            + '<a href="'+community.URL+'" target="_blank">Visit '+community.Source+'...</a>';
+
+        infoWindowContent += maptools.getInfoWindowSafetyContent(community);
+
+        infoWindowContent += '</div>';
+
         var infowindow = new google.maps.InfoWindow({
-            content: '<h1><a href="'+community.URL+'" target="_blank">'+community.Title+'</a></h1>' 
-                    + '<h2>'+community.Location+'</h2>' 
-                    + '<a href="'+community.URL+'" target="_blank">Visit '+community.Source+'...</a>'
+            content: infoWindowContent
         });
 
         var iconChoice;
@@ -171,6 +179,45 @@ var maptools = {
         });
 
         return marker;
+    },
+
+    getInfoWindowSafetyContent: function(community) {
+        var safetyInfo = '';
+
+        if (community.Force || community.Neighbourhood) {
+            safetyInfo += '<h3>Safety</h3>';
+
+            safetyInfo += maptools.getSafetyFieldContent('Your local force:', community.Force, community['Force URL']);
+            safetyInfo += maptools.getSafetyFieldContent(
+                'Your neighbourhood policing team: ', community.Neighbourhood, community['Neighbourhood URL']);
+
+            if (community['Neighbourhood email']) {
+                safetyInfo += '<p><label>Email: </label>' +
+                    '<a href="mailto:'+community['Neighbourhood email']+'">'+community['Neighbourhood email']+'</a>';
+            }
+        }
+
+        return safetyInfo;
+    },
+
+    getSafetyFieldContent: function(label, value, url) {
+        fieldContent = '';
+
+        if (value) {
+            fieldContent += '<p><label>' + label + ' </label>';
+            if (url) {
+                fieldContent += '<a href="'+url+'" target="_blank">';
+            }
+
+            fieldContent += value;
+
+            if (url) {
+                fieldContent += '</a>';
+            }
+            fieldContent += '</p>';
+        }
+
+        return fieldContent;
     },
 
     createExternalLinks: function() {
