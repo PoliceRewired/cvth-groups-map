@@ -41,7 +41,7 @@ var maptools = {
 
     readMarkers: function() {
         $.ajax({
-            url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSndAxLFYXZxfphygVkQbVhwtV9d-hwMXqNa6VdckqCkR0S7WgMqPY0zD6mCSQ4S-w89DtsjNVhNSeV/pub?gid=0&single=true&output=csv",
+            url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-iLVH2EU_R8pmaf_Gp9Z21976nt4L_45VcJAE7NDJin8I6RJZF20Prr3CFatgdo0udGCGVPnXiLxY/pub?gid=986442863&single=true&output=csv",
             success: function(data) {
                 console.log("Data CSV retrieved.");
                 var objects = $.csv.toObjects(data);
@@ -52,9 +52,9 @@ var maptools = {
                 maptools.map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(maptools.sourceSelectControlDiv);
                 maptools.geolocatorControlDiv = maptools.createGeolocator();
                 maptools.map.controls[google.maps.ControlPosition.LEFT_TOP].push(maptools.geolocatorControlDiv);
-                maptools.externalLinksControlDiv = maptools.createExternalLinks();
-                maptools.map.controls[google.maps.ControlPosition.TOP_CENTER].push(maptools.externalLinksControlDiv);
-
+                // removed - as external links now provided at helpisavailable.org.uk
+                // maptools.externalLinksControlDiv = maptools.createExternalLinks();
+                // maptools.map.controls[google.maps.ControlPosition.TOP_CENTER].push(maptools.externalLinksControlDiv);
             },
             dataType: "text",
         });
@@ -65,19 +65,19 @@ var maptools = {
         console.debug(data);
         for (var i = 0; i < data.length; i++) {
             var community = data[i];
-            if (community.Display === 'TRUE') {
+            if (community.Display === 'VISIBLE') {
                 if (community.Lat && community.Lng) {
                     console.debug('Direct plot for: ' + community.Title + " - At: " + community.Lat + ", " + community.Lng);
                     var myLatLng = { lat: parseFloat(community.Lat), lng: parseFloat(community.Lng) };
                     var marker = maptools.createMarker(community, myLatLng);
                     maptools.storeMarker(community, marker);
                 } else {
-                    console.log('Attempting geocode for: ' + community.Title);
+                    console.log('Attempting geocode for: ' + community.Title + ' with address: ' + community.Location);
                     // only geocode if necessary
                     setTimeout(maptools.plotAddress, i*300, community);
                 }
             } else {
-                console.warn('Display == FALSE for: ' + community.Title);
+                console.warn('Display == ' + community.Display + ' for: ' + community.Title);
             }
         }
     },
@@ -296,24 +296,26 @@ var maptools = {
         // step through each marker group
         for (var i = 0; i < maptools.markerGroups.length; i++) {
             var group = maptools.markerGroups[i];
-            var tr = document.createElement('tr');
-            
-            var td_check = document.createElement('td');
-            var check = document.createElement('input');
-            check.type = 'checkbox';
-            check.id = 'check_group_'+i;
-            check.name = 'check_group_'+i;
-            check.checked = true;
-            check.className = 'sourceCheck';
-            check.innerHTML = group;
-            td_check.appendChild(check);
 
-            var td_group = document.createElement('td');
-            td_group.innerHTML = "<label for='check_group_"+i+"'>"+group+"</label>";
+            if (group) {
+              var tr = document.createElement('tr');
+              var td_check = document.createElement('td');
+              var check = document.createElement('input');
+              check.type = 'checkbox';
+              check.id = 'check_group_'+i;
+              check.name = 'check_group_'+i;
+              check.checked = true;
+              check.className = 'sourceCheck';
+              check.innerHTML = group;
+              td_check.appendChild(check);
 
-            tr.appendChild(td_check);
-            tr.appendChild(td_group);
-            controlTable.appendChild(tr);
+              var td_group = document.createElement('td');
+              td_group.innerHTML = "<label for='check_group_"+i+"'>"+group+"</label>";
+
+              tr.appendChild(td_check);
+              tr.appendChild(td_group);
+              controlTable.appendChild(tr);
+            }
         }
 
         controlUI.appendChild(controlTable);
