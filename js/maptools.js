@@ -65,7 +65,7 @@ var maptools = {
         console.debug(data);
         for (var i = 0; i < data.length; i++) {
             var community = data[i];
-            if (community.Display === 'VISIBLE') {
+            if (community.Display === 'VISIBLE' || community.Display === 'UPDATED') {
                 if (community.Lat && community.Lng) {
                     console.debug('Direct plot for: ' + community.Title + " - At: " + community.Lat + ", " + community.Lng);
                     var myLatLng = { lat: parseFloat(community.Lat), lng: parseFloat(community.Lng) };
