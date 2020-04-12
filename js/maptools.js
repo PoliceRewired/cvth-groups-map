@@ -4,6 +4,7 @@ var maptools = {
     geocoder: null,
     markers: [],
     markerGroups: [],
+    markerGroupCounts: {},
     markerCluster: null,
 
     sourceSelectControlDiv: null,
@@ -30,6 +31,7 @@ var maptools = {
         maptools.markerCluster = new MarkerClusterer(maptools.map, [], {imagePath: 'markers/m'});
 
         maptools.initDocument();
+        //$('.initfocus').focus();
     },
 
     initDocument: function() {
@@ -106,8 +108,14 @@ var maptools = {
     storeMarker: function(community, marker) {
         if (!maptools.markers[community.Source]) { maptools.markers[community.Source] = []; }
         
+        // add group to groups list, and count them
         if (!maptools.markerGroups.includes(community.Source)) {
-            maptools.markerGroups.push(community.Source); // add group to groups list
+            maptools.markerGroups.push(community.Source);
+        }
+        if (!maptools.markerGroupCounts[community.Source]) {
+          maptools.markerGroupCounts[community.Source] = 1;
+        } else {
+          maptools.markerGroupCounts[community.Source] = maptools.markerGroupCounts[community.Source] + 1;
         }
 
         maptools.markers[community.Source].push(marker); // store marker against its group
@@ -287,7 +295,7 @@ var maptools = {
         var controlText = document.createElement('div');
         controlText.id = 'sourceSelectHeader';
         controlText.className = 'controlHeader';
-        controlText.innerHTML = '+ Filter communities by type...';
+        controlText.innerHTML = '+ Filter pins...';
         controlUI.appendChild(controlText);
 
         var controlTable = document.createElement('table');
@@ -295,9 +303,9 @@ var maptools = {
 
         // step through each marker group
         for (var i = 0; i < maptools.markerGroups.length; i++) {
-            var group = maptools.markerGroups[i];
+            var group = '<b>' + maptools.markerGroups[i] + '</b> (' + maptools.markerGroupCounts[maptools.markerGroups[i]] + ')'
 
-            if (group) {
+            if (maptools.markerGroups[i]) {
               var tr = document.createElement('tr');
               var td_check = document.createElement('td');
               var check = document.createElement('input');
@@ -337,26 +345,63 @@ var maptools = {
         return controlDiv;
     },
 
-    updateSources: function() {
-        console.debug('checkbox clicked.');
-        maptools.selectedGroups = [];
-        for (c = 0; c < maptools.markerGroups.length; c++) {
-            if ($('#check_group_'+c).is(":checked")) {
-                maptools.selectedGroups.push(maptools.markerGroups[c]);
-            }
-        }
-        console.debug(maptools.selectedGroups);
+    filterSubset: function(selection) {
+      var newSelection = [];
 
-        // clear and re-add markers
-        maptools.markerCluster.clearMarkers();
-        for (s = 0; s < maptools.selectedGroups.length; s++) {
-            var selectedGroup = maptools.selectedGroups[s];
-            console.debug('Adding: ' + selectedGroup + ' (' + maptools.markers[selectedGroup].length + ')');
-            for (m = 0; m < maptools.markers[selectedGroup].length; m++) {
-                var marker = maptools.markers[selectedGroup][m];
-                maptools.markerCluster.addMarker(marker);
+      switch (selection) {
+        case 'halo':
+          newSelection = ['localhalo community'];
+          break;
+        case 'council':
+          newSelection = ['council'];
+          break;
+        case 'groups':
+          for (g = 0; g < maptools.markerGroups.length; g++) {
+            if (maptools.markerGroups[g] != 'localhalo community' && maptools.markerGroups[g] != 'council') {
+              newSelection.push(maptools.markerGroups[g]);
             }
+          }
+          break;
+        case 'all':
+          for (g = 0; g < maptools.markerGroups.length; g++) {
+            newSelection.push(maptools.markerGroups[g]);
+          }
+          break;
+      }
+      console.debug(newSelection);
+      for (var i = 0; i < maptools.markerGroups.length; i++) {
+        if (newSelection.includes(maptools.markerGroups[i])) {
+          $('#check_group_'+i).prop("checked", true);
+        } else {
+          $('#check_group_'+i).prop("checked", false);
         }
+      }
+      maptools.updateSources();
+    },
+
+    updateSources: function() {
+      console.debug('checkbox clicked.');
+      maptools.selectedGroups = [];
+      for (c = 0; c < maptools.markerGroups.length; c++) {
+          if ($('#check_group_'+c).is(":checked")) {
+              maptools.selectedGroups.push(maptools.markerGroups[c]);
+          }
+      }
+      console.debug(maptools.selectedGroups);
+      maptools.reAddMarkers();
+    },
+
+    reAddMarkers: function() {
+      // clear and re-add markers
+      maptools.markerCluster.clearMarkers();
+      for (s = 0; s < maptools.selectedGroups.length; s++) {
+          var selectedGroup = maptools.selectedGroups[s];
+          console.debug('Adding: ' + selectedGroup + ' (' + maptools.markers[selectedGroup].length + ')');
+          for (m = 0; m < maptools.markers[selectedGroup].length; m++) {
+              var marker = maptools.markers[selectedGroup][m];
+              maptools.markerCluster.addMarker(marker);
+          }
+      }
     },
 
     geolocate: function() {
@@ -767,7 +812,7 @@ var maptypes = {
                 "elementType": "geometry",
                 "stylers": [
                 {
-                    "color": "#a6dbf7"
+                    "color": "#a6a6a6"
                 }
                 ]
             },
