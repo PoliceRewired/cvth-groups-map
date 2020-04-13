@@ -21,6 +21,12 @@ var maptools = {
                 mapTypeIds: [ 'roadmap', 'terrain', 'satellite', 'hybrid', 'silver', 'dark' ]
             }
         });
+
+        var width = window.innerWidth;
+        if (width < 768) {
+            maptools.map.mapTypeControlOptions = { mapTypeIds: [] };
+        }
+
         maptypes.init();
         maptools.map.mapTypes.set('silver', maptypes.silver);
         maptools.map.mapTypes.set('dark', maptypes.dark);
